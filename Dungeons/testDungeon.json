@@ -1,0 +1,149 @@
+{
+    "dungeon": {
+        "name": "The Big Dungeon",
+        "level0": {
+            "name": "Level0",
+            "damage": {
+                "chance": 1,
+                "mean": 5,
+                "stddev": 20,
+                "typeChance": {
+                    "bludgeon": 100,
+                    "poison": 0,
+                    "shock": 0,
+                    "weakness": 0,
+                    "bleed": 0,
+                    "corrosive": 0,
+                    "burn": 0,
+                    "frost": 0,
+                    "psychic": 0
+                }
+            },
+            "clearing": {
+                "strength": 100,
+                "agility": 100,
+                "intellegence": 100
+            }
+        },
+        "level1": {
+            "name": "Level1",
+            "damage": {
+                "chance": 50,
+                "mean": 15,
+                "stddev": 10,
+                "typeChance": {
+                    "bludgeon": 70,
+                    "poison": 0,
+                    "shock": 0,
+                    "weakness": 0,
+                    "bleed": 27,
+                    "corrosive": 0,
+                    "burn": 3,
+                    "frost": 0,
+                    "psychic": 0
+                }
+            },
+            "clearing": {
+                "strength": 80,
+                "agility": 65,
+                "intellegence": 50
+            }
+        },
+        "level2": {
+            "name": "Level2",
+            "damage": {
+                "chance": 60,
+                "mean": 20,
+                "stddev": 10,
+                "typeChance": {
+                    "bludgeon": 55,
+                    "poison": 0,
+                    "shock": 0,
+                    "weakness": 0,
+                    "bleed": 35,
+                    "corrosive": 0,
+                    "burn": 10,
+                    "frost": 0,
+                    "psychic": 0
+                }
+            },
+            "clearing": {
+                "strength": 75,
+                "agility": 60,
+                "intellegence": 40
+            }
+        },
+        "level3": {
+            "name": "Level3",
+            "damage": {
+                "chance": 75,
+                "mean": 25,
+                "stddev": 10,
+                "typeChance": {
+                    "bludgeon": 50,
+                    "poison": 0,
+                    "shock": 0,
+                    "weakness": 0,
+                    "bleed": 40,
+                    "corrosive": 0,
+                    "burn": 10,
+                    "frost": 0,
+                    "psychic": 0
+                }
+            },
+            "clearing": {
+                "strength": 65,
+                "agility": 45,
+                "intellegence": 30
+            }
+        },
+        "level4": {
+            "name": "Level4",
+            "damage": {
+                "chance": 90,
+                "mean": 40,
+                "stddev": 5,
+                "typeChance": {
+                    "bludgeon": 50,
+                    "poison": 0,
+                    "shock": 0,
+                    "weakness": 0,
+                    "bleed": 35,
+                    "corrosive": 0,
+                    "burn": 20,
+                    "frost": 0,
+                    "psychic": 0
+                }
+            },
+            "clearing": {
+                "strength": 60,
+                "agility": 35,
+                "intellegence": 20
+            }
+        },
+        "level5": {
+            "name": "Level5",
+            "damage": {
+                "chance": 100,
+                "mean": 40,
+                "stddev": 5,
+                "typeChance": {
+                    "bludgeon": 40,
+                    "poison": 0,
+                    "shock": 5,
+                    "weakness": 0,
+                    "bleed": 30,
+                    "corrosive": 0,
+                    "burn": 25,
+                    "frost": 0,
+                    "psychic": 0
+                }
+            },
+            "clearing": {
+                "strength": 50,
+                "agility": 30,
+                "intellegence": 10
+            }
+        }
+    }
+}
