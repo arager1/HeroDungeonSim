@@ -1,5 +1,6 @@
 
 #include <fstream>
+#include <filesystem>
 
 #include "Dungeon.hpp"
 
@@ -7,7 +8,7 @@
 class HeroFactory
 {
 public:
-    HeroFactory(std::ifstream infile) : m_heroData{nlohmann::json::parse(infile).at("hero")} {}
+    HeroFactory(std::ifstream infile) : m_heroData{nlohmann::json::parse(infile)} {}
 
     Hero makeHero() const {return Hero{m_heroData};}
 
@@ -18,8 +19,8 @@ private:
 
 int main(int argc, char* argv[])
 {
-    const std::string dungeonFilename {"../Dungeons/testDungeon.json"};
-    const std::string heroFilename {"../Heroes/testHero.json"};
+    const std::filesystem::path dungeonFilename {std::filesystem::current_path() / "Dungeons" / "testDungeon.json"};
+    const std::filesystem::path heroFilename {std::filesystem::current_path() / "Heroes" / "testHero.json"};
 
     Dungeon dungeon(nlohmann::json::parse(std::ifstream{dungeonFilename}));
     HeroFactory heroFactory {std::ifstream{heroFilename}};

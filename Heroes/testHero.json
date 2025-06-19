@@ -1,52 +1,50 @@
 {
-    "hero": {
-        "name": "Hero the Heroic",
-        "stats": {
-            "willpower": 25,
-            "resilliancy": 5,
-            "regeneration": 3,
-            "proficiencies": {
-                "strength": 15,
-                "agility": 10,
-                "intellegence": 0
-            },
-            "resistances": {
-                "bludgeon": 40,
-                "poison": 5,
-                "shock": 0,
-                "weakness": 0,
-                "bleed": 25,
-                "corrosive": 15,
-                "burn": 15,
-                "frostbite": 15,
-                "psychic": 0
-            },
-            "constitutions": {
-                "overall": 100,
-                "bludgeon": 60,
-                "poison": 40,
-                "shock": 20,
-                "weakness": 20,
-                "bleed": 50,
-                "corrosive": 50,
-                "burn": 40,
-                "frostbite": 20,
-                "psychic": 10
-            }
+    "name": "Hero the Heroic",
+    "stats": {
+        "willpower": 25,
+        "resilliancy": 5,
+        "regeneration": 3,
+        "proficiencies": {
+            "strength": 15,
+            "agility": 10,
+            "intellegence": 0
         },
-        "items": {
-            "rations": 150,
-            "medicine": {
-                "bludgeon": 100,
-                "poison": 50,
-                "shock": 0,
-                "weakness": 0,
-                "bleed": 100,
-                "corrosive": 0,
-                "burn": 0,
-                "frostbite": 0,
-                "psychic": 0
-            }
+        "resistances": {
+            "bludgeon": 40,
+            "poison": 5,
+            "shock": 0,
+            "weakness": 0,
+            "bleed": 25,
+            "corrosive": 15,
+            "burn": 15,
+            "frostbite": 15,
+            "psychic": 0
+        },
+        "constitutions": {
+            "overall": 100,
+            "bludgeon": 60,
+            "poison": 40,
+            "shock": 20,
+            "weakness": 20,
+            "bleed": 50,
+            "corrosive": 50,
+            "burn": 40,
+            "frostbite": 20,
+            "psychic": 10
+        }
+    },
+    "items": {
+        "rations": 150,
+        "medicine": {
+            "bludgeon": 100,
+            "poison": 50,
+            "shock": 0,
+            "weakness": 0,
+            "bleed": 100,
+            "corrosive": 0,
+            "burn": 0,
+            "frostbite": 0,
+            "psychic": 0
         }
     }
 }
