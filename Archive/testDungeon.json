@@ -46,7 +46,8 @@
             "clearing": {
                 "strength": 80,
                 "agility": 65,
-                "intellegence": 50
+                "intellegence": 50,
+                "type": ""
             }
         },
         "level2": {

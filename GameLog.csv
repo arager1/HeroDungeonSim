@@ -1,7 +1,9 @@
-Name,Clear,Quit,Died,Bludgeon,Poison,Shock,Weakness,Bleed,Corrossive,Burn,Frostbite,Psychic
-Level0,100,0,0,32,0,0,0,0,0,0,0,0
-Level1,100,0,0,982,0,0,0,398,0,84,0,0
-Level2,99,1,0,1328,0,0,0,771,0,191,0,0
-Level3,81,28,1,1961,0,0,0,1807,0,273,0,0
-Level4,31,57,3,1801,0,0,0,1262,0,800,0,0
-Level5,4,5,3,193,0,0,0,76,0,151,0,0
+The Big Dungeon,Wyatt the Weakling
+Attempted,AverageTime,Cleared,AverageClearingTime,Died,AverageDeathTime
+1000,323,0,0,1000,323
+The Big Dungeon,Ava the Average
+Attempted,AverageTime,Cleared,AverageClearingTime,Died,AverageDeathTime
+1000,22,567,21,462,24
+The Big Dungeon,Miley the Mighty
+Attempted,AverageTime,Cleared,AverageClearingTime,Died,AverageDeathTime
+1000,11,1000,11,0,0

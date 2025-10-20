@@ -1,0 +1,117 @@
+{
+    "name": "Miley the Mighty",
+    "stats": {
+        "energy": 3,
+        "vitality": 9,
+        "composure": 9,
+        "willpower": 9,
+        "defense": {
+            "bludgeon": {
+                "regeneration": 3,
+                "resistance": 8,
+                "medicine": {
+                    "potency": ["Strong", "Strong", "Potent"],
+                    "quantity": 4
+                }
+            },
+            "poison": {
+                "regeneration": 4,
+                "resistance": 6,
+                "medicine": {
+                    "potency": ["Potent", "Average", "Strong"],
+                    "quantity": 6
+                }
+            },
+            "shock": {
+                "regeneration": 3,
+                "resistance": 7,
+                "medicine": {
+                    "potency": ["Potent", "Potent", "Average"],
+                    "quantity": 2
+                }
+            },
+            "weakness": {
+                "regeneration": 2,
+                "resistance": 8,
+                "medicine": {
+                    "potency": ["Subtle", "Strong", "Strong"],
+                    "quantity": 2
+                }
+            },
+            "bleed": {
+                "regeneration": 3,
+                "resistance": 8,
+                "medicine": {
+                    "potency": ["Strong", "Potent", "Potent"],
+                    "quantity": 5
+                }
+            },
+            "corrosive": {
+                "regeneration": 1,
+                "resistance": 6,
+                "medicine": {
+                    "potency": ["Strong", "Weak", "Average"],
+                    "quantity": 3
+                }
+            },
+            "burn": {
+                "regeneration": 3,
+                "resistance": 5,
+                "medicine": {
+                    "potency": ["Strong", "Strong", "Potent"],
+                    "quantity": 6
+                }
+            },
+            "frostbite": {
+                "regeneration": 1,
+                "resistance": 5,
+                "medicine": {
+                    "potency": ["Strong", "Weak", "Potent"],
+                    "quantity": 1
+                }
+            },
+            "psychic": {
+                "regeneration": 1,
+                "resistance": 5,
+                "medicine": {
+                    "potency": ["Strong", "Average", "Strong"],
+                    "quantity": 1
+                }
+            }
+        },
+        "offense": {
+            "strength": {
+                "proficiency": 9
+            },
+            "agility":  {
+                "proficiency": 8
+            },
+            "intellegence":  {
+                "proficiency": 7
+            },
+            "humanoid":  {
+                "proficiency": 10
+            },
+            "natural":  {
+                "proficiency": 9
+            },
+            "elemental":  {
+                "proficiency": 4
+            },
+            "monstrous":  {
+                "proficiency": 7
+            },
+            "constructed":  {
+                "proficiency": 6
+            },
+            "astral":  {
+                "proficiency": 4
+            }
+        }
+    },
+    "rations": 150,
+    "potion": {
+        "type": "Maitake Shroom",
+        "quality": 0
+    }
+}

@@ -2,7 +2,6 @@
 #define INCLUE_GUARD_HERO_HPP
 
 #include <string>
-#include "json/include/nlohmann/json.hpp"
 #include "Utils.hpp"
 
 class StatusBar
@@ -19,11 +18,12 @@ public:
 
     void increaseMax(int amt) {m_max += amt;}
     void decreaseMax(int amt) {m_max -= (amt < m_max) ? amt : m_max;}
+    void setMax(int newMax) { m_max = newMax; }
 
     int current() const {return m_cur;}
     int max() const {return m_max;}
 
-    bool isBelowZero() const {return m_cur < 0;}
+    bool isEmpty() const {return m_cur <= 0;}
     bool isFull() const {return m_cur >= m_max;}
 
 private:
@@ -32,33 +32,575 @@ private:
 };
 
 
-struct HeroDefenseStatusBar
+class HeroStat
 {
-    HeroDefenseStatusBar(int resistStat, int statusMax) : m_resistanceStat{resistStat}, m_statusBar{StatusBar{statusMax}} {}
+public:
+    HeroStat(int initalExpLevel = 0) : m_expLevel{initalExpLevel} {}
 
-    int m_resistanceStat;
-    StatusBar m_statusBar;
-    int m_medicineQty;
+    StatLevel statLevel() const { return convertStatLevelFromInt(statLevelInt(), min(), max()); }
+
+    virtual int statValue() const = 0;
+
+    void incrementExpLevel(int amt=1) { m_expLevel += (amt < 0) ? 0 : amt; }
+
+    void setPotionBonus(int level) { m_potionBonus = level; }
+    void clearPotionBonus() { m_potionBonus = 0; }
+
+    void setMedicineBonus(int level) { m_medicineBonus = level; }
+    void clearMedicineBonus() { m_medicineBonus = 0; }
+
+    void curse(Potency potency)
+    {
+        if (m_curseLevel < potency) m_curseLevel = potency;
+    }
+    void clearCurse()
+    {
+        m_curseLevel = Potency::None;
+    }
+
+    Potency cursePotency() const { return m_curseLevel; }
+
+
+private:
+    int statLevelInt() const
+    {
+        return m_expLevel + m_potionBonus + m_medicineBonus + m_armorBonus + m_weaponBonus + curseLevelValue();
+    }
+
+    virtual int min() const = 0;
+    virtual int max() const = 0;
+    virtual int curseLevelValue() const = 0;
+
+    Potency m_curseLevel {Potency::None};
+
+    int m_expLevel {0};
+    int m_potionBonus {0};
+    int m_medicineBonus {0};
+    int m_armorBonus {0};
+    int m_weaponBonus {0};
+};
+
+class HeroRegenerationStat : public HeroStat
+{
+public:
+    HeroRegenerationStat(int initalExpLevel = 0) : HeroStat(initalExpLevel) {}
+
+    int statValue() const override
+    {
+        switch(statLevel())
+        {
+        case StatLevel::MinusThree: return -5;
+        case StatLevel::MinusTwo: return -1;
+        case StatLevel::MinusOne: return 0;
+        case StatLevel::Base: return 1;
+        case StatLevel::PlusOne: return 2;
+        case StatLevel::PlusTwo: return 5;
+        case StatLevel::PlusThree: return 10;
+        case StatLevel::PlusFour: return 15;
+        case StatLevel::PlusFive: return 20;
+        case StatLevel::PlusSix: return 30;
+        case StatLevel::PlusSeven: return 40;
+        case StatLevel::PlusEight: return 60;
+        case StatLevel::PlusNine: return 80;
+        default: return 100;
+        }
+    }
+
+private:
+    int min() const override { return -3; }
+    int max() const override { return 10; }
+    int curseLevelValue() const override
+    {
+        switch(cursePotency())
+        {
+        case Potency::Subtle: return -1;
+        case Potency::Weak: return -4;
+        case Potency::Average: return -7;
+        case Potency::Strong: return -10;
+        case Potency::Potent: return -13;
+        default: return 0;
+        }
+    }
+};
+
+class HeroVitalityStat : public HeroStat
+{
+public:
+    HeroVitalityStat(int initalExpLevel = 0) : HeroStat(initalExpLevel) {}
+
+    int statValue() const override
+    {
+        switch(statLevel())
+        {
+        case StatLevel::Base: return 10;
+        case StatLevel::PlusOne: return 15;
+        case StatLevel::PlusTwo: return 25;
+        case StatLevel::PlusThree: return 35;
+        case StatLevel::PlusFour: return 50;
+        case StatLevel::PlusFive: return 75;
+        case StatLevel::PlusSix: return 125;
+        case StatLevel::PlusSeven: return 175;
+        case StatLevel::PlusEight: return 275;
+        case StatLevel::PlusNine: return 400;
+        default: return 600;
+        }
+    }
+
+private:
+    int min() const override { return 0; }
+    int max() const override { return 10; }
+    int curseLevelValue() const override { return 0; }
+};
+
+class HeroComposureStat : public HeroStat
+{
+public:
+    HeroComposureStat(int initalExpLevel = 0) : HeroStat(initalExpLevel) {}
+
+    int statValue() const override
+    {
+        switch(statLevel())
+        {
+        case StatLevel::MinusThree: return -30;
+        case StatLevel::MinusTwo: return -20;
+        case StatLevel::MinusOne: return -10;
+        case StatLevel::Base: return 0;
+        case StatLevel::PlusOne: return 10;
+        case StatLevel::PlusTwo: return 20;
+        case StatLevel::PlusThree: return 30;
+        case StatLevel::PlusFour: return 40;
+        case StatLevel::PlusFive: return 50;
+        case StatLevel::PlusSix: return 60;
+        case StatLevel::PlusSeven: return 70;
+        case StatLevel::PlusEight: return 80;
+        case StatLevel::PlusNine: return 90;
+        default: return 100;
+        }
+    }
+
+private:
+    int min() const override { return -3; }
+    int max() const override { return 10; }
+    int curseLevelValue() const override
+    {
+        switch(cursePotency())
+        {
+        case Potency::Subtle: return -1;
+        case Potency::Weak: return -3;
+        case Potency::Average: return -5;
+        case Potency::Strong: return -7;
+        case Potency::Potent: return -9;
+        default: return 0;
+        }
+    }
+};
+
+class HeroResistanceStat : public HeroStat
+{
+public:
+    HeroResistanceStat(int initalExpLevel = 0) : HeroStat(initalExpLevel) {}
+
+    int statValue() const override
+    {
+        switch(statLevel())
+        {
+        case StatLevel::Base: return 0;
+        case StatLevel::PlusOne: return 5;
+        case StatLevel::PlusTwo: return 10;
+        case StatLevel::PlusThree: return 15;
+        case StatLevel::PlusFour: return 20;
+        case StatLevel::PlusFive: return 25;
+        case StatLevel::PlusSix: return 30;
+        case StatLevel::PlusSeven: return 40;
+        case StatLevel::PlusEight: return 50;
+        case StatLevel::PlusNine: return 60;
+        default: return 70;
+        }
+    }
+
+private:
+    int min() const override { return 0; }
+    int max() const override { return 10; }
+    int curseLevelValue() const override
+    {
+        switch(cursePotency())
+        {
+        case Potency::Subtle: return -1;
+        case Potency::Weak: return -2;
+        case Potency::Average: return -3;
+        case Potency::Strong: return -4;
+        case Potency::Potent: return -5;
+        default: return 0;
+        }
+    }
+};
+
+class HeroWillpowerStat : public HeroStat
+{
+public:
+    HeroWillpowerStat(int initalExpLevel = 0) : HeroStat(initalExpLevel) {}
+
+    int statValue() const override
+    {
+        switch(statLevel())
+        {
+        case StatLevel::MinusThree: return 0;
+        case StatLevel::MinusTwo: return 5;
+        case StatLevel::MinusOne: return 15;
+        case StatLevel::Base: return 25;
+        case StatLevel::PlusOne: return 35;
+        case StatLevel::PlusTwo: return 45;
+        case StatLevel::PlusThree: return 55;
+        case StatLevel::PlusFour: return 65;
+        case StatLevel::PlusFive: return 75;
+        case StatLevel::PlusSix: return 80;
+        case StatLevel::PlusSeven: return 85;
+        case StatLevel::PlusEight: return 90;
+        case StatLevel::PlusNine: return 95;
+        default: return 100;
+        }
+    }
+
+private:
+    int min() const override { return -3; }
+    int max() const override { return 10; }
+    int curseLevelValue() const override
+    {
+        switch(cursePotency())
+        {
+        case Potency::Subtle: return -1;
+        case Potency::Weak: return -3;
+        case Potency::Average: return -5;
+        case Potency::Strong: return -7;
+        case Potency::Potent: return -9;
+        default: return 0;
+        }
+    }
+};
+
+class HeroProficiencyStat : public HeroStat
+{
+public:
+    HeroProficiencyStat(int initalExpLevel = 0) : HeroStat(initalExpLevel) {}
+
+    int statValue() const override
+    {
+        switch(statLevel())
+        {
+        case StatLevel::Base: return -10;
+        case StatLevel::PlusOne: return -5;
+        case StatLevel::PlusTwo: return 0;
+        case StatLevel::PlusThree: return 5;
+        case StatLevel::PlusFour: return 10;
+        case StatLevel::PlusFive: return 15;
+        case StatLevel::PlusSix: return 20;
+        case StatLevel::PlusSeven: return 25;
+        case StatLevel::PlusEight: return 30;
+        case StatLevel::PlusNine: return 40;
+        default: return 50;
+        }
+    }
+
+private:
+    int min() const override { return 0; }
+    int max() const override { return 10; }
+    int curseLevelValue() const override
+    {
+        switch(cursePotency())
+        {
+        case Potency::Subtle: return -1;
+        case Potency::Weak: return -2;
+        case Potency::Average: return -3;
+        case Potency::Strong: return -4;
+        case Potency::Potent: return -5;
+        default: return 0;
+        }
+    }
+};
+
+class HeroEnergyStat : public HeroStat
+{
+public:
+    HeroEnergyStat(int initalExpLevel = 0) : HeroStat(initalExpLevel) {}
+
+    int statValue() const override
+    {
+        switch(statLevel())
+        {
+        case StatLevel::MinusThree: return -1;
+        case StatLevel::MinusTwo: return 0;
+        case StatLevel::MinusOne: return 1;
+        case StatLevel::Base: return 2;
+        case StatLevel::PlusOne: return 3;
+        case StatLevel::PlusTwo: return 4;
+        default: return 5;
+        }
+    }
+
+private:
+    int min() const override { return -3; }
+    int max() const override { return 3; }
+    int curseLevelValue() const override
+    {
+        switch(cursePotency())
+        {
+        case Potency::Subtle: return -1;
+        case Potency::Weak: return -2;
+        case Potency::Average: return -3;
+        case Potency::Strong: return -4;
+        case Potency::Potent: return -5;
+        default: return 0;
+        }
+    }
 };
 
 
-struct HeroDefenseStats
+class HeroMedicineStatus
 {
-    HeroDefenseStats(const nlohmann::json& fileData) :
-        m_resiliancy {fileData.at("resilliancy")},
-        m_overallHP {fileData.at("constitutions").at("overall")},
-        m_bludgeonHP {HeroDefenseStatusBar{fileData.at("resistances").at("bludgeon"), fileData.at("constitutions").at("bludgeon")}},
-        m_poisonHP {HeroDefenseStatusBar{fileData.at("resistances").at("poison"), fileData.at("constitutions").at("poison")}},
-        m_shockHP {HeroDefenseStatusBar{fileData.at("resistances").at("shock"), fileData.at("constitutions").at("shock")}},
-        m_weaknessHP {HeroDefenseStatusBar{fileData.at("resistances").at("weakness"), fileData.at("constitutions").at("weakness")}},
-        m_bleedHP {HeroDefenseStatusBar{fileData.at("resistances").at("bleed"), fileData.at("constitutions").at("bleed")}},
-        m_corrosiveHP {HeroDefenseStatusBar{fileData.at("resistances").at("corrosive"), fileData.at("constitutions").at("corrosive")}},
-        m_burnHP {HeroDefenseStatusBar{fileData.at("resistances").at("burn"), fileData.at("constitutions").at("burn")}},
-        m_frostbiteHP {HeroDefenseStatusBar{fileData.at("resistances").at("frostbite"), fileData.at("constitutions").at("frostbite")}},
-        m_psychicHP {HeroDefenseStatusBar{fileData.at("resistances").at("psychic"), fileData.at("constitutions").at("psychic")}} {}
+public:
+    bool isApplied() const { return m_bonusValue != 0; }
 
-    int m_resiliancy;
-    StatusBar m_overallHP;
+    int currentBonus() const { return m_bonusValue; }
+
+    void applyMedicine(int potencySum)
+    {
+        if (potencySum <= 3) { m_bonusValue = 1; m_medicineTimer.set(1); }
+        else if (potencySum == 4) { m_bonusValue = 1; m_medicineTimer.set(2); }
+        else if (potencySum == 5) { m_bonusValue = 2; m_medicineTimer.set(2); }
+        else if (potencySum == 6) { m_bonusValue = 3; m_medicineTimer.set(2); }
+        else if (potencySum == 7) { m_bonusValue = 3; m_medicineTimer.set(3); }
+        else if (potencySum == 8) { m_bonusValue = 4; m_medicineTimer.set(3); }
+        else if (potencySum == 9) { m_bonusValue = 5; m_medicineTimer.set(3); }
+        else if (potencySum == 10) { m_bonusValue = 5; m_medicineTimer.set(4); }
+        else if (potencySum == 11) { m_bonusValue = 6; m_medicineTimer.set(4); }
+        else if (potencySum == 12) { m_bonusValue = 7; m_medicineTimer.set(4); }
+        else if (potencySum == 13) { m_bonusValue = 7; m_medicineTimer.set(5); }
+        else if (potencySum == 14) { m_bonusValue = 8; m_medicineTimer.set(5); }
+        else { m_bonusValue = 9; m_medicineTimer.set(5); }
+    }
+
+    void updateStatus()
+    {
+        if (m_medicineTimer.hasElapsed())
+        {
+            m_bonusValue = 0;
+        }
+        else
+        {
+            m_medicineTimer.tick();
+        }
+    }
+
+private:
+    int m_bonusValue;
+    Timer m_medicineTimer;
+};
+
+class HeroMedicineReserve
+{
+public:
+    HeroMedicineReserve(int initialQty = 0, Potency intitialPot1 = Potency::None, Potency intitialPot2 = Potency::None, Potency intitialPot3 = Potency::None) : 
+        m_medicineQuantity{initialQty}, ing1{intitialPot1}, ing2{intitialPot2}, ing3{intitialPot3} {}
+
+    bool hasMedicine() const { return m_medicineQuantity > 0; }
+
+    int useUnit()
+    {
+        if (hasMedicine())
+        {
+            --m_medicineQuantity;
+            return potencyInt(ing1) + potencyInt(ing2) + potencyInt(ing3);
+        }
+        else return 0;
+    }
+    void addUnits(int num) { m_medicineQuantity += num; }
+
+private:
+    int m_medicineQuantity;
+    Potency ing1, ing2, ing3;
+};
+
+
+struct HeroDefenseStatusBar
+{
+    HeroDefenseStatusBar(const nlohmann::json& fileData, int vitalityValue) :
+        m_regenerationStat {fileData.at("regeneration")},
+        m_resistanceStat {fileData.at("resistance")},
+        m_statusBar {vitalityValue},
+        m_medicineStatus {},
+        m_medicineReserve {fileData.at("medicine").at("quantity"),
+            getPotencyFromString(fileData.at("medicine").at("potency")[0]),
+            getPotencyFromString(fileData.at("medicine").at("potency")[1]),
+            getPotencyFromString(fileData.at("medicine").at("potency")[2])} {}
+
+    void regenerate()
+    {
+        m_statusBar.healToMax(calculateHealAmount(m_regenerationStat.statValue(), m_statusBar.max()));
+    }
+
+    void checkMedicine()
+    {
+        if (!m_statusBar.isFull() && !m_medicineStatus.isApplied() && m_medicineReserve.hasMedicine())
+        {
+            m_medicineStatus.applyMedicine(m_medicineReserve.useUnit());
+        }
+
+        m_medicineStatus.updateStatus();
+
+        m_regenerationStat.setMedicineBonus(m_medicineStatus.currentBonus());
+    }
+
+    void curseRegen(Potency potency) { m_regenerationStat.curse(potency); }
+
+    void curseResist(Potency potency) { m_resistanceStat.curse(potency); }
+
+    void clearCurses() { m_regenerationStat.clearCurse(); m_resistanceStat.clearCurse(); }
+
+    HeroRegenerationStat m_regenerationStat;
+    HeroResistanceStat m_resistanceStat;
+    StatusBar m_statusBar;
+
+    HeroMedicineStatus m_medicineStatus;
+    HeroMedicineReserve m_medicineReserve;
+};
+
+
+class HeroDefenseStats
+{
+public:
+    HeroDefenseStats(const nlohmann::json& fileData) :
+        m_vitality {fileData.at("vitality")},
+        m_composure {fileData.at("composure")},
+        m_bludgeonHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_poisonHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_shockHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_weaknessHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_bleedHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_corrosiveHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_burnHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_frostbiteHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_psychicHP {fileData.at("defense").at("bludgeon"), m_vitality.statValue()},
+        m_vitalHP {m_vitality.statValue()},
+        m_vitalCursePotency {Potency::None} {}
+
+    bool rollComposure() const
+    {
+        return rngCheckPercent(m_composure.statValue());
+    }
+
+    void damage(int damageAmount, DamageType type)
+    {
+        const double resistanceModifier {static_cast<double>(getConstRefToTypedHP(type).m_resistanceStat.statValue()) * 0.01};
+        const int damage {damageAmount - static_cast<int>(static_cast<double>(damageAmount) * resistanceModifier)};
+
+        getRefToTypedHP(type).m_statusBar.damage(damage);
+        m_vitalHP.damage(static_cast<int>(static_cast<double>(damage) * getVitalCurseModifier()));
+    }
+
+    bool isVitalEmpty() const { return m_vitalHP.isEmpty(); }
+
+    bool isEmpty(DamageType type) const
+    {
+        return getConstRefToTypedHP(type).m_statusBar.isEmpty();
+    }
+
+    bool isDamaged(DamageType type) const
+    {
+        return !getConstRefToTypedHP(type).m_statusBar.isFull();
+    }
+
+    void curse(Potency potency, HeroStatType statType, DamageType damageType=DamageType::Psychic)
+    {
+        if (statType == HeroStatType::Vitality)
+        {
+            m_vitalCursePotency = potency;
+        }
+        else if (statType == HeroStatType::Regenerations)
+        {
+            getRefToTypedHP(damageType).curseRegen(potency);
+        }
+        else if (statType == HeroStatType::Composure)
+        {
+            m_composure.curse(potency);
+        }
+        else if (statType == HeroStatType::Resistances)
+        {
+            getRefToTypedHP(damageType).curseResist(potency);
+        }
+    }
+
+    void clearCurses()
+    {
+        m_vitalCursePotency = Potency::None;
+        m_composure.clearCurse();
+
+        m_bludgeonHP.clearCurses();
+        m_poisonHP.clearCurses();
+        m_shockHP.clearCurses();
+        m_weaknessHP.clearCurses();
+        m_bleedHP.clearCurses();
+        m_corrosiveHP.clearCurses();
+        m_burnHP.clearCurses();
+        m_frostbiteHP.clearCurses();
+        m_psychicHP.clearCurses();
+    }
+
+    void checkEachMedicine()
+    {
+        m_bludgeonHP.checkMedicine();
+        m_poisonHP.checkMedicine();
+        m_shockHP.checkMedicine();
+        m_weaknessHP.checkMedicine();
+        m_bleedHP.checkMedicine();
+        m_corrosiveHP.checkMedicine();
+        m_burnHP.checkMedicine();
+        m_frostbiteHP.checkMedicine();
+        m_psychicHP.checkMedicine();
+    }
+
+    void regenerateEach()
+    {
+        m_bludgeonHP.regenerate();
+        m_poisonHP.regenerate();
+        m_shockHP.regenerate();
+        m_weaknessHP.regenerate();
+        m_bleedHP.regenerate();
+        m_corrosiveHP.regenerate();
+        m_burnHP.regenerate();
+        m_frostbiteHP.regenerate();
+        m_psychicHP.regenerate();
+
+        int sumRegenValues {0};
+        int numHealingStats {0};
+        if (m_bludgeonHP.m_medicineStatus.isApplied()) { sumRegenValues += m_bludgeonHP.m_regenerationStat.statValue(); ++numHealingStats; }
+        if (m_poisonHP.m_medicineStatus.isApplied()) { sumRegenValues += m_poisonHP.m_regenerationStat.statValue(); ++numHealingStats; };
+        if (m_shockHP.m_medicineStatus.isApplied()) { sumRegenValues += m_shockHP.m_regenerationStat.statValue(); ++numHealingStats; };
+        if (m_weaknessHP.m_medicineStatus.isApplied()) { sumRegenValues += m_weaknessHP.m_regenerationStat.statValue(); ++numHealingStats; };
+        if (m_bleedHP.m_medicineStatus.isApplied()) { sumRegenValues += m_bleedHP.m_regenerationStat.statValue(); ++numHealingStats; };
+        if (m_corrosiveHP.m_medicineStatus.isApplied()) { sumRegenValues += m_corrosiveHP.m_regenerationStat.statValue(); ++numHealingStats; };
+        if (m_burnHP.m_medicineStatus.isApplied()) { sumRegenValues += m_burnHP.m_regenerationStat.statValue(); ++numHealingStats; };
+        if (m_frostbiteHP.m_medicineStatus.isApplied()) { sumRegenValues += m_frostbiteHP.m_regenerationStat.statValue(); ++numHealingStats; };
+        if (m_psychicHP.m_medicineStatus.isApplied()) { sumRegenValues += m_psychicHP.m_regenerationStat.statValue(); ++numHealingStats; };
+
+        if (numHealingStats > 0) m_vitalHP.healToMax(calculateHealAmount(sumRegenValues / numHealingStats, m_vitalHP.max()));
+    }
+
+    void statusEffectDamageEach()
+    {
+        statusEffectDamage(DamageType::Bludgeon);
+        statusEffectDamage(DamageType::Poison);
+        statusEffectDamage(DamageType::Shock);
+        statusEffectDamage(DamageType::Weakness);
+        statusEffectDamage(DamageType::Bleed);
+        statusEffectDamage(DamageType::Corrosive);
+        statusEffectDamage(DamageType::Burn);
+        statusEffectDamage(DamageType::Frostbite);
+        statusEffectDamage(DamageType::Psychic);
+    }
+
+private:
+    HeroVitalityStat m_vitality;
+    HeroComposureStat m_composure;
 
     HeroDefenseStatusBar m_bludgeonHP;
     HeroDefenseStatusBar m_poisonHP;
@@ -69,160 +611,310 @@ struct HeroDefenseStats
     HeroDefenseStatusBar m_burnHP;
     HeroDefenseStatusBar m_frostbiteHP;
     HeroDefenseStatusBar m_psychicHP;
+
+    StatusBar m_vitalHP;
+    Potency m_vitalCursePotency;
+
+    HeroDefenseStatusBar& getRefToTypedHP(DamageType type)
+    {
+        switch (type)
+        {
+        case DamageType::Bludgeon: return m_bludgeonHP;
+        case DamageType::Poison: return m_poisonHP;
+        case DamageType::Shock: return m_shockHP;
+        case DamageType::Weakness: return m_weaknessHP;
+        case DamageType::Bleed: return m_bleedHP;
+        case DamageType::Corrosive: return m_corrosiveHP;
+        case DamageType::Burn: return m_burnHP;
+        case DamageType::Frostbite: return m_frostbiteHP;
+        case DamageType::Psychic: return m_psychicHP;
+        default: return m_psychicHP;
+        }
+    }
+
+    const HeroDefenseStatusBar& getConstRefToTypedHP(DamageType type) const
+    {
+        switch (type)
+        {
+        case DamageType::Bludgeon: return m_bludgeonHP;
+        case DamageType::Poison: return m_poisonHP;
+        case DamageType::Shock: return m_shockHP;
+        case DamageType::Weakness: return m_weaknessHP;
+        case DamageType::Bleed: return m_bleedHP;
+        case DamageType::Corrosive: return m_corrosiveHP;
+        case DamageType::Burn: return m_burnHP;
+        case DamageType::Frostbite: return m_frostbiteHP;
+        case DamageType::Psychic: return m_psychicHP;
+        default: return m_psychicHP;
+        }
+    }
+
+    void statusEffectDamage(DamageType type)
+    {
+        if (getConstRefToTypedHP(type).m_statusBar.isEmpty()) dealRedirectedDamage(type, getConstRefToTypedHP(type).m_statusBar.current());
+    }
+
+    void dealRedirectedDamage(DamageType type, int damage)
+    {
+        switch(type)
+        {
+        case DamageType::Bludgeon: { m_poisonHP.m_statusBar.damage(damage); break; }
+        case DamageType::Poison: { m_psychicHP.m_statusBar.damage(damage); break; }
+        case DamageType::Shock: { m_burnHP.m_statusBar.damage(damage); break; }
+        case DamageType::Weakness: { m_frostbiteHP.m_statusBar.damage(damage); break; }
+        case DamageType::Bleed: { m_vitalHP.damage(damage); break; }
+        case DamageType::Corrosive: { m_bleedHP.m_statusBar.damage(damage); break; }
+        case DamageType::Burn: { m_corrosiveHP.m_statusBar.damage(damage); break; }
+        case DamageType::Frostbite: { m_corrosiveHP.m_statusBar.damage(damage); break; }
+        case DamageType::Psychic: { m_vitalHP.damage(damage); break; }
+        }
+    }
+
+    double getVitalCurseModifier() const
+    {
+        switch(m_vitalCursePotency)
+        {
+            case Potency::Subtle: return 1.1;
+            case Potency::Weak: return 1.25;
+            case Potency::Average: return 1.5;
+            case Potency::Strong: return 2;
+            case Potency::Potent: return 3;
+            default: return 1;
+        }
+    }
 };
 
 
-struct HeroOffenseStats
-{
-    HeroOffenseStats(const nlohmann::json& fileData) : 
-        m_willpower {fileData.at("willpower")},
-        m_strengthProficiency {fileData.at("proficiencies").at("strength")},
-        m_agilityProficiency {fileData.at("proficiencies").at("agility")},
-        m_intellegenceProficiency {fileData.at("proficiencies").at("intellegence")} {}
-
-    int m_willpower;
-    int m_strengthProficiency;
-    int m_agilityProficiency;
-    int m_intellegenceProficiency;
-};
-
-
-class HeroMemory
+class HeroOffenseStats
 {
 public:
-    int maxDamageSeen() const {return m_maxDamageSeen;}
-    int totalDamageRecieved() const {return m_totalDamageRecieved;}
+    HeroOffenseStats(const nlohmann::json& fileData) :
+        m_willpower {fileData.at("willpower")},
+        m_energy {fileData.at("energy")},
+        m_strengthProficiency {fileData.at("offense").at("strength").at("proficiency")},
+        m_agilityProficiency {fileData.at("offense").at("agility").at("proficiency")},
+        m_intellegenceProficiency {fileData.at("offense").at("intellegence").at("proficiency")},
+        m_humanoidProficiency {fileData.at("offense").at("humanoid").at("proficiency")},
+        m_naturalProficiency {fileData.at("offense").at("natural").at("proficiency")},
+        m_elementalProficiency {fileData.at("offense").at("elemental").at("proficiency")},
+        m_monstrousProficiency {fileData.at("offense").at("monstrous").at("proficiency")},
+        m_constructedProficiency {fileData.at("offense").at("constructed").at("proficiency")},
+        m_astralProficiency {fileData.at("offense").at("astral").at("proficiency")} {}
 
-    void rememberNewDamage(int newDamage)
+    int rollProficiencyCheck(int baseStrengthChance, int baseAgilityChance, int baseIntellegenceChance, ThreatType threatType)
     {
-        m_totalDamageRecieved += newDamage;
-        if (newDamage > m_maxDamageSeen) m_maxDamageSeen = newDamage;
+        const int strengthDamage {(rollWillpower() && rollStrengthProficiency(baseStrengthChance, threatType)) ? 1 : 0};
+        const int agilityDamage {(rollWillpower() && rollAgilityProficiency(baseAgilityChance, threatType)) ? 1 : 0};
+        const int intellegenceDamage {(rollWillpower() && rollIntellegenceProficiency(baseIntellegenceChance, threatType)) ? 1 : 0};
 
-        // More advanced things
+        return strengthDamage + agilityDamage + intellegenceDamage;
+    }
+
+    void curse(Potency potency, HeroStatType statType, ProficiencyType profType=ProficiencyType::Intellegence)
+    {
+        if (statType == HeroStatType::Willpower)
+        {
+            m_willpower.curse(potency);
+        }
+        else if (statType == HeroStatType::Energy)
+        {
+            m_energy.curse(potency);
+        }
+        else if (statType == HeroStatType::Proficiencies)
+        {
+            if (profType == ProficiencyType::Strength) m_strengthProficiency.curse(potency);
+            else if (profType == ProficiencyType::Agility) m_agilityProficiency.curse(potency);
+            else if (profType == ProficiencyType::Intellegence) m_intellegenceProficiency.curse(potency);
+        }
+    }
+    void curse(Potency potency, ThreatType threatType)
+    {
+        if (threatType == ThreatType::Humanoid) m_humanoidProficiency.curse(potency);
+        else if (threatType == ThreatType::Natural) m_naturalProficiency.curse(potency);
+        else if (threatType == ThreatType::Elemental) m_elementalProficiency.curse(potency);
+        else if (threatType == ThreatType::Monstrous) m_monstrousProficiency.curse(potency);
+        else if (threatType == ThreatType::Constructed) m_constructedProficiency.curse(potency);
+        else if (threatType == ThreatType::Astral) m_astralProficiency.curse(potency);
+    }
+
+    void clearCurses()
+    {
+        m_willpower.clearCurse();
+        m_energy.clearCurse();
+
+        m_strengthProficiency.clearCurse();
+        m_agilityProficiency.clearCurse();
+        m_intellegenceProficiency.clearCurse();
+        m_humanoidProficiency.clearCurse();
+        m_naturalProficiency.clearCurse();
+        m_elementalProficiency.clearCurse();
+        m_monstrousProficiency.clearCurse();
+        m_constructedProficiency.clearCurse();
+        m_astralProficiency.clearCurse();
     }
 
 private:
-    int m_maxDamageSeen{};
-    int m_totalDamageRecieved{};
+    HeroWillpowerStat m_willpower;
+    HeroEnergyStat m_energy;
+
+    HeroProficiencyStat m_strengthProficiency;
+    HeroProficiencyStat m_agilityProficiency;
+    HeroProficiencyStat m_intellegenceProficiency;
+
+    HeroProficiencyStat m_humanoidProficiency;
+    HeroProficiencyStat m_naturalProficiency;
+    HeroProficiencyStat m_elementalProficiency;
+    HeroProficiencyStat m_monstrousProficiency;
+    HeroProficiencyStat m_constructedProficiency;
+    HeroProficiencyStat m_astralProficiency;
+
+    bool rollWillpower() const
+    {
+        return rngCheckPercent(m_willpower.statValue());
+    }
+
+    bool rollStrengthProficiency(int baseClearChance, ThreatType threatType)
+    {
+        return rngCheckPercent(baseClearChance + getProficiencyValue(ProficiencyType::Strength) + getThreatValue(threatType));
+    }
+
+    bool rollAgilityProficiency(int baseClearChance, ThreatType threatType)
+    {
+        return rngCheckPercent(baseClearChance + getProficiencyValue(ProficiencyType::Agility) + getThreatValue(threatType));
+    }
+
+    bool rollIntellegenceProficiency(int baseClearChance, ThreatType threatType)
+    {
+        return rngCheckPercent(baseClearChance + getProficiencyValue(ProficiencyType::Intellegence) + getThreatValue(threatType));
+    }
+
+    int getProficiencyValue(ProficiencyType type)
+    {
+        switch (type)
+        {
+        case ProficiencyType::Strength: return m_strengthProficiency.statValue();
+        case ProficiencyType::Agility: return m_agilityProficiency.statValue();
+        default: return m_intellegenceProficiency.statValue();
+        }
+    }
+
+    int getThreatValue(ThreatType type)
+    {
+        switch (type)
+        {
+        case ThreatType::Humanoid: return m_humanoidProficiency.statValue();
+        case ThreatType::Natural: return m_naturalProficiency.statValue();
+        case ThreatType::Elemental: return m_elementalProficiency.statValue();
+        case ThreatType::Monstrous: return m_monstrousProficiency.statValue();
+        case ThreatType::Constructed: return m_constructedProficiency.statValue();
+        default: return m_astralProficiency.statValue();
+        }
+    }
 };
 
 
 class Hero
 {
 public:
-    Hero(const nlohmann::json& fileData) :
-        m_name {fileData.at("name")},
-        m_defenseStats {fileData.at("stats")},
-        m_offenseStats {fileData.at("stats")},
-        m_memory{} {}
-    
+    Hero(const nlohmann::json& fileData) : m_name {fileData.at("name")}, m_defenseStats {fileData.at("stats")}, m_offenseStats{fileData.at("stats")}, m_mortallyWounded{false} {}
+
+    std::string name() const { return m_name; }
+    bool isDead() const { return m_mortallyWounded; }
+
+    bool rollPreventDamage() const
+    {
+        return m_defenseStats.rollComposure();
+    }
+
     void damage(int damageAmount, DamageType type)
-    {   
-        const int dmg {damageAmount - static_cast<int>(static_cast<float>(damageAmount) *
-                                      static_cast<float>(resistance(type)) * 0.01)};
-
-        modifyOverallHP().damage(dmg);
-        modifyTypedHP(type).m_statusBar.damage(dmg);
-
-        m_memory.rememberNewDamage(dmg);
-
-        Logger::logDamage(dmg, type, currentOverallHP(), overallConstitution(), 
-                          currentTypedHP(type), typedConstitution(type));
-        Logger::logHP("Overall", currentOverallHP(), overallConstitution());
+    {
+        m_defenseStats.damage(damageAmount, type);
     }
 
-    bool proficiencyCheck(int strengthCheck, int agilityCheck, int intellegenceCheck) const
+    bool hasAction()
     {
-        return proficiencyCheckHelper(strengthCheck, ProficiencyType::Strength) ||
-               proficiencyCheckHelper(agilityCheck, ProficiencyType::Agility) ||
-               proficiencyCheckHelper(intellegenceCheck, ProficiencyType::Intellegence);
+        return true;
     }
 
-    bool willingToAttempt() const
+    void statusConditionDamagePhase()
     {
-        return currentOverallHP() > m_memory.maxDamageSeen();
+        m_defenseStats.statusEffectDamageEach();
     }
 
-    int resilliancy() const {return m_defenseStats.m_resiliancy;}
-
-    int resistance(DamageType type) const {return getRefToTypedHP(type).m_resistanceStat;}
-
-    int currentOverallHP() const {return m_defenseStats.m_overallHP.current();}
-
-    int currentTypedHP(DamageType type) const {return getRefToTypedHP(type).m_statusBar.current();}
-
-    int overallConstitution() const {return m_defenseStats.m_overallHP.max();}
-
-    int typedConstitution(DamageType type) const {return getRefToTypedHP(type).m_statusBar.max();}
-
-    int willpower() const {return m_offenseStats.m_willpower;}
-
-    int proficiency(ProficiencyType type) const
+    int rollProficiencyCheck(int baseStrengthChance, int baseAgilityChance, int baseIntellegenceChance, ThreatType threatType)
     {
-        switch (type)
+        return m_offenseStats.rollProficiencyCheck(baseStrengthChance, baseAgilityChance, baseIntellegenceChance, threatType);
+    }
+
+    void takeNewMedicinePhase()
+    {
+        m_defenseStats.checkEachMedicine();
+    }
+
+    void regeneratePhase()
+    {
+        m_defenseStats.regenerateEach();
+    }
+
+    void applyStatusConditionsPhase()
+    {
+        m_defenseStats.clearCurses();
+        m_offenseStats.clearCurses();
+
+        if (m_defenseStats.isEmpty(DamageType::Bludgeon))
         {
-        case ProficiencyType::Strength: return m_offenseStats.m_strengthProficiency;
-        case ProficiencyType::Agility: return m_offenseStats.m_agilityProficiency;
-        case ProficiencyType::Intellegence: return m_offenseStats.m_intellegenceProficiency;
-        default: return 0;
+            m_defenseStats.curse(Potency::Subtle, HeroStatType::Vitality);
         }
+        if (m_defenseStats.isEmpty(DamageType::Poison))
+        {
+            m_defenseStats.curse(Potency::Average, HeroStatType::Regenerations, DamageType::Poison);
+        }
+        if (m_defenseStats.isEmpty(DamageType::Shock))
+        {
+            m_offenseStats.curse(Potency::Subtle, HeroStatType::Energy);
+            m_defenseStats.curse(Potency::Weak, HeroStatType::Composure);
+        }
+        if (m_defenseStats.isEmpty(DamageType::Weakness))
+        {
+            m_offenseStats.curse(Potency::Subtle, HeroStatType::Energy);
+            m_offenseStats.curse(Potency::Weak, HeroStatType::Willpower);
+        }
+        if (m_defenseStats.isEmpty(DamageType::Bleed))
+        {
+            m_defenseStats.curse(Potency::Average, HeroStatType::Vitality);
+        }
+        if (m_defenseStats.isEmpty(DamageType::Corrosive))
+        {
+            m_defenseStats.curse(Potency::Average, HeroStatType::Regenerations, DamageType::Corrosive);
+        }
+        if (m_defenseStats.isEmpty(DamageType::Burn))
+        {
+            m_defenseStats.curse(Potency::Weak, HeroStatType::Composure);
+        }
+        if (m_defenseStats.isEmpty(DamageType::Frostbite))
+        {
+            m_offenseStats.curse(Potency::Subtle, HeroStatType::Willpower);
+        }
+        if (m_defenseStats.isEmpty(DamageType::Psychic))
+        {
+            m_defenseStats.curse(Potency::Average, HeroStatType::Regenerations, DamageType::Psychic);
+        }
+
+        // If Hero is Cursed due to some other mechanism
+        // curse stat
+
+        m_mortallyWounded = m_defenseStats.isVitalEmpty();
     }
-
-    bool isAlive() const {return currentOverallHP() > 0;}
-
-    std::string name() const {return m_name;}
 
 private:
-    std::string m_name{};
+    std::string m_name;
+
     HeroDefenseStats m_defenseStats;
     HeroOffenseStats m_offenseStats;
-    HeroMemory m_memory;
 
-    StatusBar& modifyOverallHP() {return m_defenseStats.m_overallHP;}
-
-    HeroDefenseStatusBar& modifyTypedHP(DamageType type)
-    {
-        switch (type)
-        {
-        case DamageType::Bludgeon: return m_defenseStats.m_bludgeonHP;
-        case DamageType::Poison: return m_defenseStats.m_poisonHP;
-        case DamageType::Shock: return m_defenseStats.m_shockHP;
-        case DamageType::Weakness: return m_defenseStats.m_weaknessHP;
-        case DamageType::Bleed: return m_defenseStats.m_bleedHP;
-        case DamageType::Corrosive: return m_defenseStats.m_corrosiveHP;
-        case DamageType::Burn: return m_defenseStats.m_burnHP;
-        case DamageType::Frostbite: return m_defenseStats.m_frostbiteHP;
-        case DamageType::Psychic: return m_defenseStats.m_psychicHP;
-        default: return m_defenseStats.m_psychicHP;
-        }
-    }
-
-    const HeroDefenseStatusBar& getRefToTypedHP(DamageType type) const
-    {
-        switch (type)
-        {
-        case DamageType::Bludgeon: return m_defenseStats.m_bludgeonHP;
-        case DamageType::Poison: return m_defenseStats.m_poisonHP;
-        case DamageType::Shock: return m_defenseStats.m_shockHP;
-        case DamageType::Weakness: return m_defenseStats.m_weaknessHP;
-        case DamageType::Bleed: return m_defenseStats.m_bleedHP;
-        case DamageType::Corrosive: return m_defenseStats.m_corrosiveHP;
-        case DamageType::Burn: return m_defenseStats.m_burnHP;
-        case DamageType::Frostbite: return m_defenseStats.m_frostbiteHP;
-        case DamageType::Psychic: return m_defenseStats.m_psychicHP;
-        default: return m_defenseStats.m_psychicHP;
-        }
-    }
-
-    bool proficiencyCheckHelper(int baseClearChance, ProficiencyType type) const
-    {
-        const bool willpowerCheck {rngCheckPercent(willpower())};
-        const bool proficiencyCheck {rngCheckPercent(baseClearChance + proficiency(type))};
-
-        Logger::log(getProficiencyTypeName(type) + " check: Willpower " + (willpowerCheck ? "Success!" : "FAILED") + " Proficiency " + (proficiencyCheck ? "Success!" : "FAILED"));
-
-        return willpowerCheck && proficiencyCheck;
-    }
+    bool m_mortallyWounded;
 };
+
+
 
 #endif

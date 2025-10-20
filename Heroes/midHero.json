@@ -1,0 +1,117 @@
+{
+    "name": "Ava the Average",
+    "stats": {
+        "energy": 2,
+        "vitality": 4,
+        "composure": 5,
+        "willpower": 5,
+        "defense": {
+            "bludgeon": {
+                "regeneration": 1,
+                "resistance": 5,
+                "medicine": {
+                    "potency": ["Strong", "Strong", "Average"],
+                    "quantity": 4
+                }
+            },
+            "poison": {
+                "regeneration": 0,
+                "resistance": 3,
+                "medicine": {
+                    "potency": ["Potent", "Average", "Weak"],
+                    "quantity": 6
+                }
+            },
+            "shock": {
+                "regeneration": 0,
+                "resistance": 1,
+                "medicine": {
+                    "potency": ["Subtle", "Potent", "Average"],
+                    "quantity": 2
+                }
+            },
+            "weakness": {
+                "regeneration": 0,
+                "resistance": 1,
+                "medicine": {
+                    "potency": ["Subtle", "Subtle", "Weak"],
+                    "quantity": 2
+                }
+            },
+            "bleed": {
+                "regeneration": 1,
+                "resistance": 6,
+                "medicine": {
+                    "potency": ["Strong", "Weak", "Weak"],
+                    "quantity": 5
+                }
+            },
+            "corrosive": {
+                "regeneration": 0,
+                "resistance": 3,
+                "medicine": {
+                    "potency": ["Subtle", "Weak", "Average"],
+                    "quantity": 3
+                }
+            },
+            "burn": {
+                "regeneration": 1,
+                "resistance": 4,
+                "medicine": {
+                    "potency": ["Weak", "Strong", "Potent"],
+                    "quantity": 6
+                }
+            },
+            "frostbite": {
+                "regeneration": 0,
+                "resistance": 2,
+                "medicine": {
+                    "potency": ["Subtle", "Weak", "Subtle"],
+                    "quantity": 1
+                }
+            },
+            "psychic": {
+                "regeneration": 0,
+                "resistance": 0,
+                "medicine": {
+                    "potency": ["Subtle", "Subtle", "Subtle"],
+                    "quantity": 1
+                }
+            }
+        },
+        "offense": {
+            "strength": {
+                "proficiency": 6
+            },
+            "agility":  {
+                "proficiency": 4
+            },
+            "intellegence":  {
+                "proficiency": 3
+            },
+            "humanoid":  {
+                "proficiency": 7
+            },
+            "natural":  {
+                "proficiency": 5
+            },
+            "elemental":  {
+                "proficiency": 1
+            },
+            "monstrous":  {
+                "proficiency": 3
+            },
+            "constructed":  {
+                "proficiency": 3
+            },
+            "astral":  {
+                "proficiency": 0
+            }
+        }
+    },
+    "rations": 150,
+    "potion": {
+        "type": "Maitake Shroom",
+        "quality": 0
+    }
+}

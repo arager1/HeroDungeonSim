@@ -1,205 +1,375 @@
 #ifndef INCLUE_GUARD_DUNGEON_HPP
 #define INCLUE_GUARD_DUNGEON_HPP
 
-#include <random>
 #include <vector>
-
+#include <map>
+#include "Utils.hpp"
 #include "Hero.hpp"
 
 
+constexpr int NUM_SUCCESSES_NEEDED {3};
+
+enum class RoomType
+{
+    Empty,
+    Wellspring,
+    Switch,
+    Boss
+};
+
+enum class RoomLevel
+{
+    L0, L1, L2, L3, L4, L5
+};
+
 class DungeonRoom
 {
-public: 
-    DungeonRoom(const nlohmann::json& fileData) :
-        m_chanceDealDamage{fileData.at("damage").at("chance")},
-        m_damageMean{fileData.at("damage").at("mean")},
-        m_damageStddev{fileData.at("damage").at("stddev")},
-        m_damageTypeList{{fileData.at("damage").at("typeChance").at("bludgeon"),
-                          fileData.at("damage").at("typeChance").at("poison"),
-                          fileData.at("damage").at("typeChance").at("shock"),
-                          fileData.at("damage").at("typeChance").at("weakness"),
-                          fileData.at("damage").at("typeChance").at("bleed"),
-                          fileData.at("damage").at("typeChance").at("corrosive"),
-                          fileData.at("damage").at("typeChance").at("burn"),
-                          fileData.at("damage").at("typeChance").at("frost"), 
-                          fileData.at("damage").at("typeChance").at("psychic")}},
+public:
+    DungeonRoom(RoomLevel level=RoomLevel::L0, RoomType type=RoomType::Empty) : m_level{level}, m_type{type}
+    {
+
+    }
+
+    void useActionBy(Hero& hero)
+    {
+        useSubtypeAction(hero);
+    }
+
+    bool isHostile() const
+    {
+        return m_isHostile;
+    }
+
+    void regenerate()
+    {
+        m_isHostile = true;
+    }
+
+    void pacify()
+    {
+        m_isHostile = false;
+    }
+
+    RoomLevel level() const
+    {
+        return m_level;
+    }
+
+private:
+    bool m_isHostile {true};
+
+    const RoomLevel m_level {};
+    const RoomType m_type {};
+
+    virtual void useSubtypeAction(Hero& hero)
+    {
+        // Do nothing for empty room
+    }
+};
+
+class DungeonRoomList
+{
+public:
+    DungeonRoomList(RoomLevel level, RoomType type = RoomType::Empty) : m_currentRoomIndex{0}
+    {
+        addRoom(level, type);
+    }
+
+    void addRoom(RoomLevel level, RoomType type = RoomType::Empty)
+    {
+        m_roomList.push_back(DungeonRoom(level, type));
+    }
+
+    RoomLevel currentLevel() const
+    {
+        return m_roomList[m_currentRoomIndex].level();
+    }
+
+    bool isCurrentRoomHostile() const
+    {
+        return m_roomList[m_currentRoomIndex].isHostile();
+    }
+
+    bool allRoomsClear() const
+    {
+        for (auto& room : m_roomList) if (room.isHostile()) return false;
+        return true;
+    }
+
+    void pacifyCurrentRoom()
+    {
+        m_roomList[m_currentRoomIndex].pacify();
+    }
+
+    void regenerateRooms(int hostility)
+    {
+        for (auto& room : m_roomList)
+        {
+            if (!room.isHostile())
+            {
+                const int numHostileConnections {rngGenerateInRange(0, 3)}; // TODO
+                const int chanceRegenerate {numHostileConnections * hostility};
+                if (rngCheckPercent(chanceRegenerate)) room.regenerate();
+            }
+        }
+    }
+
+    bool findNextHostileRoom()
+    {
+        const int initialIndex {m_currentRoomIndex};
+        while (!isCurrentRoomHostile())
+        {
+            ++m_currentRoomIndex;
+            if (m_currentRoomIndex == m_roomList.size()) m_currentRoomIndex = 0;
+            if (m_currentRoomIndex == initialIndex) return false;
+        }
+        return true;
+    }
+
+    void useCurrentRoomActionBy(Hero& hero)
+    {
+        m_roomList[m_currentRoomIndex].useActionBy(hero);
+    }
+
+private:
+    std::vector<DungeonRoom> m_roomList;
+    int m_currentRoomIndex;
+};
+
+
+class DungeonStatBlock
+{
+public:
+    DungeonStatBlock(const nlohmann::json& fileData) :
+        m_hostility{fileData.at("hostility")},
+        m_volatility{fileData.at("damage").at("chance")},
+        m_damageMagnitudeMean{fileData.at("damage").at("mean")},
+        m_damageMagnitudeStddev{fileData.at("damage").at("stddev")},
+        m_chanceTypeBludgeon{fileData.at("damage").at("typeChance").at("bludgeon")},
+        m_chanceTypePoison{fileData.at("damage").at("typeChance").at("poison")},
+        m_chanceTypeShock{fileData.at("damage").at("typeChance").at("shock")},
+        m_chanceTypeWeakness{fileData.at("damage").at("typeChance").at("weakness")},
+        m_chanceTypeBleed{fileData.at("damage").at("typeChance").at("bleed")},
+        m_chanceTypeCorrosive{fileData.at("damage").at("typeChance").at("corrosive")},
+        m_chanceTypeBurn{fileData.at("damage").at("typeChance").at("burn")},
+        m_chanceTypeFrostbite{fileData.at("damage").at("typeChance").at("frost")}, 
+        m_chanceTypePsychic{fileData.at("damage").at("typeChance").at("psychic")},
         m_strengthCheckChance{fileData.at("clearing").at("strength")},
         m_agilityCheckChance{fileData.at("clearing").at("agility")},
         m_intellegenceCheckChance{fileData.at("clearing").at("intellegence")},
-        m_name{fileData.at("name")},
-        m_numTimesCleared{},
-        m_numTimesQuit{},
-        m_numTimesDied{} {}
+        m_chanceTypeHumanoid{fileData.at("clearing").at("typeChance").at("humanoid")},
+        m_chanceTypeNatural{fileData.at("clearing").at("typeChance").at("natural")},
+        m_chanceTypeElemental{fileData.at("clearing").at("typeChance").at("elemental")},
+        m_chanceTypeMonstrous{fileData.at("clearing").at("typeChance").at("monstrous")}, 
+        m_chanceTypeConstructed{fileData.at("clearing").at("typeChance").at("constructed")},
+        m_chanceTypeAstral{fileData.at("clearing").at("typeChance").at("astral")} {}
 
-    bool attemptRoomClear(Hero& hero)
+    bool rollDealDamage() const
     {
-        bool dungeonAttemptsDamage {rngCheckPercent(m_chanceDealDamage)};
-        if (dungeonAttemptsDamage)
-        {
-            bool heroPreventsDamage {rngCheckPercent(hero.resilliancy())};
-            if (!heroPreventsDamage)
-            {   
-                const int damageAmt {normalDistGenPos(m_damageMean, m_damageStddev)};
-                const DamageType damageType {determineDamageType(m_damageTypeList)};
-                hero.damage(damageAmt, damageType);
-                recordDamage(damageAmt, damageType);
-            }
-            else
-            {
-                Logger::log("Hero avoids damage");
-            }
-        }
-        else
-        {
-            Logger::log("Dungeon does not attempt damage");
-        }
-
-        const bool heroSuccess {hero.proficiencyCheck(m_strengthCheckChance, m_agilityCheckChance, m_intellegenceCheckChance)};
-
-        if (heroSuccess)
-        {
-            Logger::log("Room clear!");
-            ++m_numTimesCleared;
-            return true;
-        }
-        else
-        {
-            Logger::log("All proficiency checks failed. Room not cleared.");
-            return false;
-        }
-
-        
+        return rngCheckPercent(m_volatility);
     }
 
-    std::string name() const {return m_name;}
+    int rollDamageAmount() const
+    {
+        return normalDistGenPos(m_damageMagnitudeMean, m_damageMagnitudeStddev);
+    }
 
-    // void increaseNumCleared() {++m_numTimesCleared;}
-    void increaseNumQuit() {++m_numTimesQuit;}
-    void increaseNumDied() {++m_numTimesDied;}
+    DamageType rollDamageType() const
+    {
+        return determineDamageType(
+            m_chanceTypeBludgeon,
+            m_chanceTypePoison,
+            m_chanceTypeShock,
+            m_chanceTypeWeakness,
+            m_chanceTypeBleed,
+            m_chanceTypeCorrosive,
+            m_chanceTypeBurn,
+            m_chanceTypeFrostbite,
+            m_chanceTypePsychic);
+    }
 
-    int getNumCleared() const {return m_numTimesCleared;}
-    int getNumQuit() const {return m_numTimesQuit;}
-    int getNumDied() const {return m_numTimesDied;}
-    int getBludgeonDealt() const {return m_bludgeonDealt;}
-    int getPoisonDealt() const {return m_poisonDealt;}
-    int getShockDealt() const {return m_shockDealt;}
-    int getWeaknessDealt() const {return m_weaknessDealt;}
-    int getBleedDealt() const {return m_bleedDealt;}
-    int getCorrosiveDealt() const {return m_corrosiveDealt;}
-    int getBurnDealt() const {return m_burnDealt;}
-    int getFrostbiteDealt() const {return m_frostbiteDealt;}
-    int getPsychicDealt() const {return m_psychicDealt;}
+    ThreatType rollThreatType() const
+    {
+        return determineThreatType(
+            m_chanceTypeHumanoid,
+            m_chanceTypeNatural,
+            m_chanceTypeElemental,
+            m_chanceTypeMonstrous,
+            m_chanceTypeConstructed,
+            m_chanceTypeAstral);
+    }
+
+    int hostility() const { return m_hostility; }
+    int baseStrengthChance() const { return m_strengthCheckChance; }
+    int baseAgilityChance() const { return m_agilityCheckChance; }
+    int baseIntellegenceChance() const { return m_intellegenceCheckChance; }
 
 private:
-    const int m_chanceDealDamage {};
-    const int m_damageMean {};
-    const int m_damageStddev {};
+    const int m_hostility;
+    const int m_volatility;
 
-    const std::vector<int> m_damageTypeList {};
+    const int m_damageMagnitudeMean;
+    const int m_damageMagnitudeStddev;
 
-    const int m_strengthCheckChance {};
-    const int m_agilityCheckChance {};
-    const int m_intellegenceCheckChance {};
+    const int m_chanceTypeBludgeon;
+    const int m_chanceTypePoison;
+    const int m_chanceTypeShock;
+    const int m_chanceTypeWeakness;
+    const int m_chanceTypeBleed;
+    const int m_chanceTypeCorrosive;
+    const int m_chanceTypeBurn;
+    const int m_chanceTypeFrostbite;
+    const int m_chanceTypePsychic;
 
-    std::string m_name {};
+    const int m_strengthCheckChance;
+    const int m_agilityCheckChance;
+    const int m_intellegenceCheckChance;
 
-    int m_numTimesCleared {};
-    int m_numTimesQuit {};
-    int m_numTimesDied {};
-
-    void recordDamage(int amt, DamageType type)
-    {
-        switch (type)
-        {
-        case DamageType::Bludgeon: m_bludgeonDealt += amt; break;
-        case DamageType::Poison: m_poisonDealt += amt; break;
-        case DamageType::Shock: m_shockDealt += amt; break;
-        case DamageType::Weakness: m_weaknessDealt += amt; break;
-        case DamageType::Bleed: m_bleedDealt += amt; break;
-        case DamageType::Corrosive: m_corrosiveDealt += amt; break;
-        case DamageType::Burn: m_burnDealt += amt; break;
-        case DamageType::Frostbite: m_frostbiteDealt += amt; break;
-        case DamageType::Psychic: m_psychicDealt += amt; break;
-        }
-    }
-
-    int m_bludgeonDealt {};
-    int m_poisonDealt {};
-    int m_shockDealt {};
-    int m_weaknessDealt {};
-    int m_bleedDealt {};
-    int m_corrosiveDealt {};
-    int m_burnDealt {};
-    int m_frostbiteDealt {};
-    int m_psychicDealt {};
+    const int m_chanceTypeHumanoid;
+    const int m_chanceTypeNatural;
+    const int m_chanceTypeElemental;
+    const int m_chanceTypeMonstrous;
+    const int m_chanceTypeConstructed;
+    const int m_chanceTypeAstral;
 };
+
+typedef std::map<RoomLevel, DungeonStatBlock> DungeonStatTable;
+
 
 
 class Dungeon
 {
 public:
     Dungeon(const nlohmann::json& fileData) :
-        m_dungeonRoomList {{DungeonRoom(fileData.at("dungeon").at("level0")), 
-                            DungeonRoom(fileData.at("dungeon").at("level1")), 
-                            DungeonRoom(fileData.at("dungeon").at("level2")),
-                            DungeonRoom(fileData.at("dungeon").at("level3")),
-                            DungeonRoom(fileData.at("dungeon").at("level4")),
-                            DungeonRoom(fileData.at("dungeon").at("level5"))}},
-        m_name{fileData.at("dungeon").at("name")} {}
-
-    bool attempt(Hero& hero)
+        m_name {fileData.at("dungeon").at("name")},
+        m_statBlocklevel0 {fileData.at("dungeon").at("L0")},
+        m_statBlocklevel1 {fileData.at("dungeon").at("L1")},
+        m_statBlocklevel2 {fileData.at("dungeon").at("L2")},
+        m_statBlocklevel3 {fileData.at("dungeon").at("L3")},
+        m_statBlocklevel4 {fileData.at("dungeon").at("L4")},
+        m_statBlocklevel5 {fileData.at("dungeon").at("L5")},
+        m_roomList {RoomLevel::L0}
     {
-        int levelIndex {0};
-        for (DungeonRoom& room : m_dungeonRoomList)
-        {
-            int attemptCount{1};
-            while(hero.isAlive() && hero.willingToAttempt() && !room.attemptRoomClear(hero))
-            {
-                ++attemptCount;
-            }
-
-            if (!hero.isAlive())
-            {
-                Logger::log("Hero is dead.");
-                room.increaseNumDied();
-                return false;
-            }
-            else if (!hero.willingToAttempt())
-            {
-                Logger::log("Hero is not willing to attempt further.");
-                room.increaseNumQuit();
-                return false;
-            }
-
-            Logger::log("Hero completed Level: " + std::to_string(levelIndex));
-
-            ++levelIndex;
-        }
-
-        return true;
+        m_roomList.addRoom(RoomLevel::L1);
+        m_roomList.addRoom(RoomLevel::L2);
+        m_roomList.addRoom(RoomLevel::L3);
+        m_roomList.addRoom(RoomLevel::L4);
+        m_roomList.addRoom(RoomLevel::L5);
     }
 
-    std::string getName() const {return m_name;}
+    int cycleCount() const { return m_cycleCount; }
+    std::string name() const { return m_name; }
+    bool isClear() const { return m_roomList.allRoomsClear(); }
 
-    std::string getStats() const
-    {        
-        std::stringstream ss{};
-        ss << "Name" << "," << "Clear" << "," << "Quit" << "," << "Died" << ",";
-        ss << "Bludgeon" << "," << "Poison" << "," << "Shock" << "," << "Weakness" << "," << "Bleed" << ",";
-        ss << "Corrossive" << "," << "Burn" << "," << "Frostbite" << "," << "Psychic" << "\n";
-        for (const auto& room : m_dungeonRoomList)
+    void runCycle(Hero& hero)
+    {
+        regenerateDungeonPhase();
+
+        // Dungeon Deals Damage Phase
+        if (m_roomList.findNextHostileRoom())
         {
-            ss << room.name() << "," << room.getNumCleared() << "," << room.getNumQuit() << "," << room.getNumDied() << ",";
-            ss << room.getBludgeonDealt() << "," << room.getPoisonDealt() << "," << room.getShockDealt() << ",";
-            ss << room.getWeaknessDealt() << "," << room.getBleedDealt() << "," << room.getCorrosiveDealt() << ",";
-            ss << room.getBurnDealt() << "," << room.getFrostbiteDealt() << "," << room.getPsychicDealt() << "\n";
+            dealDamageTo(hero);
         }
-        return ss.str();
+
+        hero.statusConditionDamagePhase();
+
+        // Hero Action Phase
+        if (hero.hasAction())
+        {
+            if (m_roomList.isCurrentRoomHostile())
+            {
+                attemptHostileRoomClear(hero);
+            }
+            else
+            {
+                useActionOnRoomBy(hero);
+            }
+        }
+
+        hero.takeNewMedicinePhase();
+
+        hero.regeneratePhase();
+
+        hero.applyStatusConditionsPhase();
+
+        ++m_cycleCount;
     }
 
 private:
-    std::vector<DungeonRoom> m_dungeonRoomList{};
-    std::string m_name{};
+    int m_cycleCount {0};
+    std::string m_name;
+
+    DungeonStatBlock m_statBlocklevel0;
+    DungeonStatBlock m_statBlocklevel1;
+    DungeonStatBlock m_statBlocklevel2;
+    DungeonStatBlock m_statBlocklevel3;
+    DungeonStatBlock m_statBlocklevel4;
+    DungeonStatBlock m_statBlocklevel5;
+
+    DungeonRoomList m_roomList;
+
+    int m_heroSuccessCounter {0};
+
+    const DungeonStatBlock& statBlock(RoomLevel level)
+    {
+        switch (level)
+        {
+        case RoomLevel::L1: return m_statBlocklevel1;
+        case RoomLevel::L2: return m_statBlocklevel2;
+        case RoomLevel::L3: return m_statBlocklevel3;
+        case RoomLevel::L4: return m_statBlocklevel4;
+        case RoomLevel::L5: return m_statBlocklevel5;
+        default: return m_statBlocklevel0;
+        }
+    }
+
+    const DungeonStatBlock& currStatBlock()
+    {
+        return statBlock(m_roomList.currentLevel());
+    }
+
+    int getHostility(RoomLevel level)
+    {
+        return statBlock(level).hostility();
+    }
+
+    void regenerateDungeonPhase()
+    {
+        m_roomList.regenerateRooms(getHostility(m_roomList.currentLevel()));
+    }
+
+    void dealDamageTo(Hero& hero)
+    {
+        const bool dungeonAttemptsDamage {currStatBlock().rollDealDamage()};
+        const bool heroPreventsDamage {hero.rollPreventDamage()};
+
+        if (dungeonAttemptsDamage && !heroPreventsDamage)
+        {
+            const int damageAmt {currStatBlock().rollDamageAmount()};
+            const DamageType damageType {currStatBlock().rollDamageType()};
+            hero.damage(damageAmt, damageType);
+        }
+    }
+
+    void attemptHostileRoomClear(Hero& hero)
+    {
+        m_heroSuccessCounter += hero.rollProficiencyCheck(
+            currStatBlock().baseStrengthChance(),
+            currStatBlock().baseAgilityChance(),
+            currStatBlock().baseIntellegenceChance(),
+            currStatBlock().rollThreatType());
+
+        if (m_heroSuccessCounter >= NUM_SUCCESSES_NEEDED)
+        {
+            m_roomList.pacifyCurrentRoom();
+            m_heroSuccessCounter = 0;
+        }
+    }
+
+    void useActionOnRoomBy(Hero& hero)
+    {
+        m_roomList.useCurrentRoomActionBy(hero);
+    }
 };
 
 #endif

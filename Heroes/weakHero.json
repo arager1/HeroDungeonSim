@@ -1,0 +1,117 @@
+{
+    "name": "Wyatt the Weakling",
+    "stats": {
+        "energy": -1,
+        "vitality": 2,
+        "composure": -1,
+        "willpower": -2,
+        "defense": {
+            "bludgeon": {
+                "regeneration": 0,
+                "resistance": 1,
+                "medicine": {
+                    "potency": ["Average", "Subtle", "Average"],
+                    "quantity": 6
+                }
+            },
+            "poison": {
+                "regeneration": 0,
+                "resistance": 0,
+                "medicine": {
+                    "potency": ["Weak", "Average", "Weak"],
+                    "quantity": 4
+                }
+            },
+            "shock": {
+                "regeneration": -1,
+                "resistance": 0,
+                "medicine": {
+                    "potency": ["Subtle", "Subtle", "Average"],
+                    "quantity": 2
+                }
+            },
+            "weakness": {
+                "regeneration": -1,
+                "resistance": 0,
+                "medicine": {
+                    "potency": ["None", "None", "None"],
+                    "quantity": 0
+                }
+            },
+            "bleed": {
+                "regeneration": -1,
+                "resistance": 2,
+                "medicine": {
+                    "potency": ["Subtle", "Weak", "Weak"],
+                    "quantity": 5
+                }
+            },
+            "corrosive": {
+                "regeneration": 0,
+                "resistance": 0,
+                "medicine": {
+                    "potency": ["None", "None", "None"],
+                    "quantity": 0
+                }
+            },
+            "burn": {
+                "regeneration": 0,
+                "resistance": 1,
+                "medicine": {
+                    "potency": ["Weak", "Strong", "Subtle"],
+                    "quantity": 3
+                }
+            },
+            "frostbite": {
+                "regeneration": -1,
+                "resistance": 0,
+                "medicine": {
+                    "potency": ["None", "None", "None"],
+                    "quantity": 0
+                }
+            },
+            "psychic": {
+                "regeneration": -2,
+                "resistance": 0,
+                "medicine": {
+                    "potency": ["None", "None", "None"],
+                    "quantity": 0
+                }
+            }
+        },
+        "offense": {
+            "strength": {
+                "proficiency": 0
+            },
+            "agility":  {
+                "proficiency": 0
+            },
+            "intellegence":  {
+                "proficiency": 2
+            },
+            "humanoid":  {
+                "proficiency": 0
+            },
+            "natural":  {
+                "proficiency": 1
+            },
+            "elemental":  {
+                "proficiency": 1
+            },
+            "monstrous":  {
+                "proficiency": 0
+            },
+            "constructed":  {
+                "proficiency": 2
+            },
+            "astral":  {
+                "proficiency": 0
+            }
+        }
+    },
+    "rations": 150,
+    "potion": {
+        "type": "Maitake Shroom",
+        "quality": 0
+    }
+}
