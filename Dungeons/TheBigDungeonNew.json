@@ -1,35 +1,66 @@
 {
     "dungeon": {
         "name": "The Big Dungeon",
-        "hostility":            [5,   5,  10, 10, 10, 15],
-        "damage": {
-            "volatility":       [1,   50, 50, 60, 60, 70],
-            "mean":             [5,   5,  10, 10, 25, 30],
-            "stddev":           [1,   1,  2,  5,  10, 10],
-            "typeChance": {
-                "bludgeon":     [100, 70, 55, 40, 35, 30],
-                "poison":       [0,   0,  0,  0,  0,  0 ],
-                "shock":        [0,   0,  0,  0,  0,  5 ],
-                "weakness":     [0,   0,  0,  0,  0,  0 ],
-                "bleed":        [0,   25, 35, 40, 40, 40],
-                "corrosive":    [0,   0,  0,  0,  0,  0 ],
-                "burn":         [0,   5,  10, 20, 25, 25],
-                "frost":        [0,   0,  0,  0,  0,  0 ],
-                "psychic":      [0,   0,  0,  0,  0,  0 ]
-            }
+        "scale": 4,
+        "rage": 4,
+        "alarmStart": 0,
+        "alarmRate": 3,
+        "chaos": 1,
+        "averageStrObstacle": 5,
+        "averageAgiObstacle": 4,
+        "averageIntObstacle": 2,
+        "damageType": {
+            "bludgeon":     [100, 70, 55, 40, 30, 25],
+            "poison":       [0,   0,  0,  0,  0,  1 ],
+            "shock":        [0,   0,  0,  0,  5,  5 ],
+            "weakness":     [0,   0,  0,  0,  0,  1 ],
+            "bleed":        [0,   25, 35, 40, 40, 40],
+            "corrosive":    [0,   0,  0,  0,  0,  1 ],
+            "burn":         [0,   5,  10, 20, 25, 25],
+            "frost":        [0,   0,  0,  0,  0,  1 ],
+            "psychic":      [0,   0,  0,  0,  0,  1 ]
         },
-        "clearing": {
-            "strength":         [100, 80, 75, 65, 60, 50],
-            "agility":          [100, 65, 60, 45, 35, 30],
-            "intellegence":     [100, 50, 40, 30, 20, 20],
-            "typeChance": {
-                "humanoid":     [0,   70, 50, 50, 50, 30],
-                "natural":      [100, 30, 30, 20, 5,  0 ],
-                "elemental":    [0,   0,  0,  0,  5,  5 ],
-                "monstrous":    [0,   0,  5,  10, 20, 30],
-                "constructed":  [0,   0,  15, 20, 20, 30],
-                "astral":       [0,   0,  0,  0,  0,  5 ]
-            }
+        "threatType": {
+            "humanoid":     [0,   70, 50, 50, 50, 30],
+            "natural":      [100, 30, 30, 20, 5,  5 ],
+            "elemental":    [0,   0,  0,  0,  5,  5 ],
+            "monstrous":    [0,   0,  5,  10, 20, 30],
+            "constructed":  [0,   0,  15, 20, 20, 25],
+            "astral":       [0,   0,  0,  0,  0,  5 ]
+        },
+        "graph": {
+            "rooms": [
+                {
+                    "id": "room_start",
+                    "paths": [
+                        "room_left", "room_center", "room_right"
+                    ]
+                },
+                {
+                    "id": "room_left",
+                    "paths": [
+                        "room_final"
+                    ]
+                },
+                {
+                    "id": "room_center",
+                    "paths": [
+                        "room_final"
+                    ]
+                },
+                {
+                    "id": "room_right",
+                    "paths": [
+                        "room_final"
+                    ]
+                },
+                {
+                    "id": "room_final",
+                    "paths": [
+                        
+                    ]
+                }
+            ]
         }
     }
 }

@@ -4,7 +4,8 @@
 #include <random>
 #include <iostream>
 #include <sstream>
-#include "json/include/nlohmann/json.hpp"
+
+#include "json.hpp"
 
 
 enum class DamageType
@@ -72,14 +73,15 @@ bool operator <(Potency lhs, Potency rhs)
 
 StatLevel convertStatLevelFromInt(int levelSum, int min=-10, int max=10)
 {
-    const int newMin {(min < -10) ? -10 : min};
-    const int newMax {(max > 10) ? 10 : max};
+    constexpr int absMin {-10}, absMax {10}; 
 
-    const int newLevelSum {(levelSum < min) ? min : (levelSum > max) ? max : levelSum};
+    const int newMin {(min < absMin) ? absMin : min}, newMax {(max > absMax) ? absMax : max};
+
+    const int newLevelSum {(levelSum < newMin) ? newMin : (levelSum > newMax) ? newMax : levelSum};
 
     switch (newLevelSum)
     {
-    case -10: return StatLevel::MinusTen;
+    case absMin: return StatLevel::MinusTen;
     case -9: return StatLevel::MinusNine;
     case -8: return StatLevel::MinusEight;
     case -7: return StatLevel::MinusSeven;
@@ -99,7 +101,8 @@ StatLevel convertStatLevelFromInt(int levelSum, int min=-10, int max=10)
     case 7: return StatLevel::PlusSeven;
     case 8: return StatLevel::PlusEight;
     case 9: return StatLevel::PlusNine;
-    default: return StatLevel::PlusTen;
+    case absMax: return StatLevel::PlusTen;
+    default: return StatLevel::Base;
     }
 }
 
@@ -190,37 +193,67 @@ DamageType determineDamageType(const std::vector<int>& damageTypeList)
     return static_cast<DamageType>(dist(rngGen));
 }
 
+class DamageTypeDist
+{
+public:
+    DamageTypeDist(int chanceTypeBludgeon, int chanceTypePoison, int chanceTypeShock, int chanceTypeWeakness, int chanceTypeBleed, int chanceTypeCorrosive, int chanceTypeBurn, int chanceTypeFrostbite, int chanceTypePsychic) :
+        m_damageTypeList {{chanceTypeBludgeon, chanceTypePoison, chanceTypeShock, chanceTypeWeakness, chanceTypeBleed, chanceTypeCorrosive, chanceTypeBurn, chanceTypeFrostbite, chanceTypePsychic}} {}
+
+    DamageType generateType() const
+    {
+        std::discrete_distribution<int> dist{m_damageTypeList.begin(), m_damageTypeList.end()};
+        switch (dist(rngGen))
+        {
+        case 0: return DamageType::Bludgeon;
+        case 1: return DamageType::Poison;
+        case 2: return DamageType::Shock;
+        case 3: return DamageType::Weakness;
+        case 4: return DamageType::Bleed;
+        case 5: return DamageType::Corrosive;
+        case 6: return DamageType::Burn;
+        case 7: return DamageType::Frostbite;
+        default: return DamageType::Psychic;
+        }
+    }
+
+private:
+    const std::vector<int> m_damageTypeList;
+};
+
 DamageType determineDamageType(int chanceTypeBludgeon, int chanceTypePoison, int chanceTypeShock, int chanceTypeWeakness, int chanceTypeBleed, int chanceTypeCorrosive, int chanceTypeBurn, int chanceTypeFrostbite, int chanceTypePsychic)
 {
-    const std::vector<int> damageTypeList {{chanceTypeBludgeon, chanceTypePoison, chanceTypeShock, chanceTypeWeakness, chanceTypeBleed, chanceTypeCorrosive, chanceTypeBurn, chanceTypeFrostbite, chanceTypePsychic}};
-    std::discrete_distribution<int> dist{damageTypeList.begin(), damageTypeList.end()};
-    switch (dist(rngGen))
-    {
-    case 0: return DamageType::Bludgeon;
-    case 1: return DamageType::Poison;
-    case 2: return DamageType::Shock;
-    case 3: return DamageType::Weakness;
-    case 4: return DamageType::Bleed;
-    case 5: return DamageType::Corrosive;
-    case 6: return DamageType::Burn;
-    case 7: return DamageType::Frostbite;
-    default: return DamageType::Psychic;
-    }
+    const DamageTypeDist damageTypeDist {chanceTypeBludgeon, chanceTypePoison, chanceTypeShock, chanceTypeWeakness, chanceTypeBleed, chanceTypeCorrosive, chanceTypeBurn, chanceTypeFrostbite, chanceTypePsychic};
+    return damageTypeDist.generateType();
 }
+
+class ThreatTypeDist
+{
+public:
+    ThreatTypeDist(int chanceTypeHumanoid, int chanceTypeNatural, int chanceTypeElemental, int chanceTypeMonstrous, int chanceTypeConstructed, int chanceTypeAstral) :
+        m_threatTypeList {{chanceTypeHumanoid, chanceTypeNatural, chanceTypeElemental, chanceTypeMonstrous, chanceTypeConstructed, chanceTypeAstral}} {}
+
+    ThreatType generateType() const
+    {
+        std::discrete_distribution<int> dist{m_threatTypeList.begin(), m_threatTypeList.end()};
+        switch (dist(rngGen))
+        {
+        case 0: return ThreatType::Humanoid;
+        case 1: return ThreatType::Natural;
+        case 2: return ThreatType::Elemental;
+        case 3: return ThreatType::Monstrous;
+        case 4: return ThreatType::Constructed;
+        default: return ThreatType::Astral;
+        }
+    }
+
+private:
+    const std::vector<int> m_threatTypeList;
+};
 
 ThreatType determineThreatType(int chanceTypeHumanoid, int chanceTypeNatural, int chanceTypeElemental, int chanceTypeMonstrous, int chanceTypeConstructed, int chanceTypeAstral)
 {
-    const std::vector<int> damageTypeList {{chanceTypeHumanoid, chanceTypeNatural, chanceTypeElemental, chanceTypeMonstrous, chanceTypeConstructed, chanceTypeAstral}};
-    std::discrete_distribution<int> dist{damageTypeList.begin(), damageTypeList.end()};
-    switch (dist(rngGen))
-    {
-    case 0: return ThreatType::Humanoid;
-    case 1: return ThreatType::Natural;
-    case 2: return ThreatType::Elemental;
-    case 3: return ThreatType::Monstrous;
-    case 4: return ThreatType::Constructed;
-    default: return ThreatType::Astral;
-    }
+    const ThreatTypeDist damageTypeList {chanceTypeHumanoid, chanceTypeNatural, chanceTypeElemental, chanceTypeMonstrous, chanceTypeConstructed, chanceTypeAstral};
+    return damageTypeList.generateType();
 }
 
 int calculateHealAmount(int regenStatValue, int maxHP)

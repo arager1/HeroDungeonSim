@@ -233,9 +233,6 @@ private:
     const int m_chanceTypeAstral;
 };
 
-typedef std::map<RoomLevel, DungeonStatBlock> DungeonStatTable;
-
-
 
 class Dungeon
 {
